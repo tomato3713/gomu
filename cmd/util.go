@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dhowden/tag"
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
@@ -15,7 +16,8 @@ import (
 )
 
 type MusicInfo struct {
-	Path string `json:"path"`
+	Path     string `json:"path"`
+	metadata tag.Metadata
 }
 
 type MusicList []MusicInfo
@@ -84,4 +86,19 @@ func playMusic(filename string) error {
 
 	fmt.Println("played: ", filename)
 	return nil
+}
+
+func readMetaData(filename string) (tag.Metadata, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	m, err := tag.ReadFrom(f)
+	if err != nil {
+		return nil, err
+	}
+
+	return m, nil
 }

@@ -8,6 +8,7 @@ require (
 )
 
 require (
+	github.com/dhowden/tag v0.0.0-20201120070457-d52dcb253c63 // indirect
 	github.com/faiface/beep v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/hajimehoshi/go-mp3 v0.3.0 // indirect

@@ -16,7 +16,10 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
+	"log"
+	"os"
+	"path/filepath"
+	"sort"
 
 	"github.com/spf13/cobra"
 )
@@ -29,9 +32,7 @@ var albumCmd = &cobra.Command{
     For example:
 
     gomu album path-to-album-dir`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("album called")
-	},
+	Run: runAlbum,
 }
 
 func init() {
@@ -46,4 +47,61 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// albumCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+}
+
+func runAlbum(cmd *cobra.Command, args []string) {
+	if len(args) < 1 {
+		log.Fatal("you need to specify the music file or play list file.")
+		return
+	}
+
+	dir := args[0]
+	if !Exists(dir) {
+		log.Fatal("check your specified file is exists.")
+		return
+	}
+
+	list, err := loadAlbum(dir)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	sort.Slice(list, func(i, j int) bool {
+		t1_num, _ := list[i].metadata.Track()
+		t2_num, _ := list[j].metadata.Track()
+		return t1_num < t2_num
+	})
+	for _, music := range list {
+		playMusic(music.Path)
+	}
+}
+
+func loadAlbum(dir string) (MusicList, error) {
+	dir, err := expandPath(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	var list MusicList
+	for _, f := range files {
+		path := filepath.Join(dir, f.Name())
+		ext := filepath.Ext(path)
+		if ext == ".mp3" || ext == ".ogg" || ext == ".fla" || ext == ".flac" {
+			meta, err := readMetaData(path)
+			if err != nil {
+				return nil, err
+			}
+			list = append(list, MusicInfo{
+				Path:     filepath.Join(dir, f.Name()),
+				metadata: meta,
+			})
+		}
+	}
+
+	return list, nil
 }
