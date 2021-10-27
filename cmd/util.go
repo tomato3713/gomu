@@ -14,6 +14,12 @@ import (
 	"github.com/faiface/beep/wav"
 )
 
+type MusicInfo struct {
+	Path string `json:"path"`
+}
+
+type MusicList []MusicInfo
+
 func Exists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil

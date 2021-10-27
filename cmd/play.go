@@ -25,12 +25,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type MusicInfo struct {
-	Path string `json:"path"`
-}
-
-type PlayList []MusicInfo
-
 // playCmd represents the play command
 var playCmd = &cobra.Command{
 	Use:   "play",
@@ -94,7 +88,7 @@ func playPlayList(filename string) error {
 	return nil
 }
 
-func loadPlayList(filename string) (PlayList, error) {
+func loadPlayList(filename string) (MusicList, error) {
 	f, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -106,7 +100,7 @@ func loadPlayList(filename string) (PlayList, error) {
 		return nil, err
 	}
 
-	var list PlayList
+	var list MusicList
 	if err := json.Unmarshal(b, &list); err != nil {
 		return nil, err
 	}
