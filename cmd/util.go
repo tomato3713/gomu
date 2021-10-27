@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/mp3"
+	"github.com/faiface/beep/speaker"
 	"github.com/faiface/beep/vorbis"
 	"github.com/faiface/beep/wav"
 )
@@ -27,4 +30,52 @@ func Decode(f *os.File) (beep.StreamCloser, beep.Format, error) {
 	default:
 		return nil, beep.Format{}, fmt.Errorf("not supported format.")
 	}
+}
+
+func expandPath(path string) (string, error) {
+	path = os.ExpandEnv(path)
+
+	usrHome, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+
+	if path == "~" {
+		path = usrHome
+	} else if strings.HasPrefix(path, "~/") {
+		path = filepath.Join(usrHome, path[2:])
+	}
+
+	return path, nil
+}
+
+func playMusic(filename string) error {
+	filename, err := expandPath(filename)
+	if err != nil {
+		return err
+	}
+
+	f, err := os.Open(filename)
+	defer f.Close()
+	if err != nil {
+		return err
+	}
+
+	streamer, format, err := Decode(f)
+	defer streamer.Close()
+	if err != nil {
+		return err
+	}
+
+	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+
+	done := make(chan struct{})
+	speaker.Play(beep.Seq(streamer, beep.Callback(func() {
+		done <- struct{}{}
+	})))
+
+	<-done
+
+	fmt.Println("played: ", filename)
+	return nil
 }

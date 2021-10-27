@@ -21,10 +21,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"time"
 
-	"github.com/faiface/beep"
-	"github.com/faiface/beep/speaker"
 	"github.com/spf13/cobra"
 )
 
@@ -80,31 +77,6 @@ func runPlay(cmd *cobra.Command, args []string) {
 	if err := f(filename); err != nil {
 		log.Fatal(err)
 	}
-}
-
-func playMusic(filename string) error {
-	var err error
-	f, err := os.Open(filename)
-	defer f.Close()
-	if err != nil {
-		return err
-	}
-
-	streamer, format, err := Decode(f)
-	defer streamer.Close()
-	if err != nil {
-		return err
-	}
-
-	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
-
-	done := make(chan struct{})
-	speaker.Play(beep.Seq(streamer, beep.Callback(func() {
-		done <- struct{}{}
-	})))
-
-	<-done
-	return nil
 }
 
 func playPlayList(filename string) error {
