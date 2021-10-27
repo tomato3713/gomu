@@ -24,13 +24,12 @@ import (
 // playCmd represents the play command
 var playCmd = &cobra.Command{
 	Use:   "play",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Play music: specified music file or your original play list file.",
+	Long: `Play music: specified music file or your original play list file.
+    For example:
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+    gomu play path-to-music.mp4
+    gomu play path-to-playlist.json`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("play called")
 	},

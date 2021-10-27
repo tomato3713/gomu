@@ -24,13 +24,11 @@ import (
 // albumCmd represents the album command
 var albumCmd = &cobra.Command{
 	Use:   "album",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "play album. specified album directory.",
+	Long: `play album. specified album directory.
+    For example:
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+    gomu album path-to-album-dir`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("album called")
 	},
