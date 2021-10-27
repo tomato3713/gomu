@@ -17,7 +17,6 @@ package cmd
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -114,7 +113,12 @@ func playPlayList(filename string) error {
 		return err
 	}
 
-	fmt.Println(l)
+	for _, music := range l {
+		if err = playMusic(music.Path); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
