@@ -16,6 +16,9 @@ limitations under the License.
 package cmd
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -25,6 +28,12 @@ import (
 	"github.com/faiface/beep/speaker"
 	"github.com/spf13/cobra"
 )
+
+type MusicInfo struct {
+	Path string `json:"path"`
+}
+
+type PlayList []MusicInfo
 
 // playCmd represents the play command
 var playCmd = &cobra.Command{
@@ -100,5 +109,31 @@ func playMusic(filename string) error {
 }
 
 func playPlayList(filename string) error {
+	l, err := loadPlayList(filename)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(l)
 	return nil
+}
+
+func loadPlayList(filename string) (PlayList, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	b, err := io.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+
+	var list PlayList
+	if err := json.Unmarshal(b, &list); err != nil {
+		return nil, err
+	}
+
+	return list, nil
 }
