@@ -106,6 +106,11 @@ func loadPlayList(filename string) (MusicList, error) {
 	}
 
 	for _, file := range list {
+		file.Path, err = expandPath(file.Path)
+		if err != nil {
+			return nil, err
+		}
+
 		meta, err := readMetaData(file.Path)
 		if err != nil {
 			return nil, err
