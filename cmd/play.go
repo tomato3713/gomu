@@ -16,17 +16,13 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/faiface/beep"
-	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
-	"github.com/faiface/beep/vorbis"
-	"github.com/faiface/beep/wav"
 	"github.com/spf13/cobra"
 )
 
@@ -86,18 +82,7 @@ func playMusic(filename string) error {
 		return err
 	}
 
-	var streamer beep.StreamCloser
-	var format beep.Format
-	switch filepath.Ext(filename) {
-	case ".mp3":
-		streamer, format, err = mp3.Decode(f)
-	case ".wav":
-		streamer, format, err = wav.Decode(f)
-	case ".ogg":
-		streamer, format, err = vorbis.Decode(f)
-	default:
-		return fmt.Errorf("not supported format.")
-	}
+	streamer, format, err := Decode(f)
 	defer streamer.Close()
 	if err != nil {
 		return err
