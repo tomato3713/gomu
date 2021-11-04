@@ -2,6 +2,12 @@
 
 music player written by golang.
 
+## Install
+
+```sh
+go install github.com/tomato3713/gomu@latest
+```
+
 ## Usage
 
 ### music file
@@ -36,9 +42,9 @@ Example of playlist.json is:
 ```json
 { 
     [ 
-    { file: path-to-music1 },
-    { file: path-to-music2 },
-    { file: path-to-music3 } 
+    { "path": "path-to-music1" },
+    { "path": "path-to-music2" },
+    { "path": "path-to-music3" } 
     ] 
 }
 ```
