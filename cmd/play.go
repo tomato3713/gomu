@@ -17,10 +17,12 @@ package cmd
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -65,11 +67,64 @@ func runPlay(cmd *cobra.Command, args []string) {
 
 	f := playPlayList
 	if filepath.Ext(filename) != ".json" {
-		f = playMusic
+		var music MusicInfo
+		path, err := expandPath(filename)
+		if err != nil {
+			log.Fatal(err)
+		}
+		ext := filepath.Ext(path)
+		if ext == ".mp3" || ext == ".ogg" || ext == ".fla" || ext == ".flac" {
+			meta, err := readMetaData(path)
+			if err != nil {
+				log.Fatal(err)
+			}
+			music = MusicInfo{
+				Path:     path,
+				metadata: meta,
+			}
+		}
+		err = playMusic(music, playedOneMusic)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	if err := f(filename); err != nil {
 		log.Fatal(err)
+	}
+}
+
+func playedOneMusic(t time.Duration, music MusicInfo) {
+	info := map[string]interface{}{
+		"time":        t,
+		"music_title": music.metadata.Title(),
+		"artist":      music.metadata.Artist(),
+		"path":        music.Path,
+	}
+
+	jsonByte, err := json.Marshal(info)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(jsonByte))
+}
+
+func playedPlayList(num, total int) func(time.Duration, MusicInfo) {
+	return func(t time.Duration, music MusicInfo) {
+		info := map[string]interface{}{
+			"time":        t,
+			"music_title": music.metadata.Title(),
+			"artist":      music.metadata.Artist(),
+			"path":        music.Path,
+			"list_num":    num,
+			"list_total":  total,
+		}
+
+		jsonByte, err := json.Marshal(info)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(string(jsonByte))
 	}
 }
 
@@ -79,8 +134,8 @@ func playPlayList(filename string) error {
 		return err
 	}
 
-	for _, music := range l {
-		if err = playMusic(music.Path); err != nil {
+	for iter, music := range l {
+		if err = playMusic(music, playedPlayList(iter, len(l))); err != nil {
 			return err
 		}
 	}

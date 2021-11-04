@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
 	"time"
@@ -22,12 +23,14 @@ type MusicInfo struct {
 
 type MusicList []MusicInfo
 
+var StopedErr = fmt.Errorf("stopped music by Ctrl+C")
+
 func Exists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
 }
 
-func Decode(f *os.File) (beep.StreamCloser, beep.Format, error) {
+func Decode(f *os.File) (beep.StreamSeekCloser, beep.Format, error) {
 	switch filepath.Ext(f.Name()) {
 	case ".mp3":
 		return mp3.Decode(f)
@@ -57,8 +60,8 @@ func expandPath(path string) (string, error) {
 	return path, nil
 }
 
-func playMusic(filename string) error {
-	filename, err := expandPath(filename)
+func playMusic(music MusicInfo, printer func(time.Duration, MusicInfo)) error {
+	filename, err := expandPath(music.Path)
 	if err != nil {
 		return err
 	}
@@ -82,10 +85,23 @@ func playMusic(filename string) error {
 		done <- struct{}{}
 	})))
 
-	<-done
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
 
-	fmt.Println("played: ", filename)
-	return nil
+	for {
+		select {
+		case <-done:
+			speaker.Lock()
+			printer(format.SampleRate.D(streamer.Position()).Round(time.Second), music)
+			speaker.Unlock()
+			return nil
+		case <-quit:
+			speaker.Lock()
+			printer(format.SampleRate.D(streamer.Position()).Round(time.Second), music)
+			speaker.Unlock()
+			return StopedErr
+		}
+	}
 }
 
 func readMetaData(filename string) (tag.Metadata, error) {

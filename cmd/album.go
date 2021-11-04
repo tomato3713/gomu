@@ -16,10 +16,13 @@ limitations under the License.
 package cmd
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"sort"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -72,8 +75,32 @@ func runAlbum(cmd *cobra.Command, args []string) {
 		return t1_num < t2_num
 	})
 	for _, music := range list {
-		playMusic(music.Path)
+		if err := playMusic(music, playedAlbum); err != nil {
+			if err == StopedErr {
+				return
+			}
+			log.Fatal(err)
+		}
 	}
+}
+
+func playedAlbum(t time.Duration, music MusicInfo) {
+	t1, t2 := music.metadata.Track()
+	info := map[string]interface{}{
+		"time":        t,
+		"album_title": music.metadata.Album(),
+		"music_title": music.metadata.Title(),
+		"artist":      music.metadata.Artist(),
+		"track_num":   t1,
+		"track_total": t2,
+		"path":        music.Path,
+	}
+
+	jsonByte, err := json.Marshal(info)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(jsonByte))
 }
 
 func loadAlbum(dir string) (MusicList, error) {
