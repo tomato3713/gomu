@@ -105,6 +105,7 @@ func loadPlayList(filename string) (MusicList, error) {
 		return nil, err
 	}
 
+	var ret MusicList
 	for _, file := range list {
 		file.Path, err = expandPath(file.Path)
 		if err != nil {
@@ -115,9 +116,10 @@ func loadPlayList(filename string) (MusicList, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		file.metadata = meta
+
+		ret = append(ret, file)
 	}
 
-	return list, nil
+	return ret, nil
 }
